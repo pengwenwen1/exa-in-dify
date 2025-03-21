@@ -6,7 +6,6 @@
 
 
 ### Contact
-For questions or support, contact: evanchen@dify.ai
 ![Exa Logo](./_assets/image%20copy.png)
 
 
