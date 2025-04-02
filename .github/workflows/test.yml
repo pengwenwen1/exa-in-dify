@@ -116,7 +116,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PLUGIN_ACTION }}
         with:
-          source_branch: "Yevanchen:update-exa-plugin-${{ steps.get_version.outputs.version }}"
+          source_branch: "update-exa-plugin-${{ steps.get_version.outputs.version }}"
           destination_repository: "langgenius/dify-plugins"
           destination_branch: "main"
           pr_title: "Update exa plugin to version ${{ steps.get_version.outputs.version }}"
@@ -127,8 +127,7 @@ jobs:
             - Updated plugin package file
           github_token: ${{ secrets.PLUGIN_ACTION }}
           pr_allow_empty: true
-          repo_token: ${{ secrets.PLUGIN_ACTION }}
-          github_repository: "Yevanchen/dify-plugins"
+        working-directory: dify-plugins
 
       - name: Print environment info
         run: |
