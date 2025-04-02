@@ -122,6 +122,8 @@ jobs:
             Changes:
             - Updated plugin package file
           github_token: ${{ secrets.PLUGIN_ACTION }}
+          pr_allow_empty: true
+          source_repository: "Yevanchen/dify-plugins"
           
       - name: Print environment info
         run: |
