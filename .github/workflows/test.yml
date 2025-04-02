@@ -64,35 +64,30 @@ jobs:
           repository: Yevanchen/dify-plugins
           path: dify-plugins
           token: ${{ secrets.PLUGIN_ACTION }}
-          fetch-depth: 1
-          persist-credentials: true
+          fetch-depth: 0
           
       - name: Prepare and create PR
         run: |
           # Debug info
           echo "Debug: Current directory $(pwd)"
-          echo "Debug: Package name: $PACKAGE_NAME"
-          ls -la
+          echo "Debug: Looking for package in: $GITHUB_WORKSPACE"
+          ls -la $GITHUB_WORKSPACE
           
           # 移动打包文件到目标目录
           PACKAGE_NAME="exa-${{ steps.get_version.outputs.version }}.difypkg"
-          mkdir -p dify-plugins/yevanchen/exa
-          mv "$PACKAGE_NAME" dify-plugins/yevanchen/exa/
+          mkdir -p $GITHUB_WORKSPACE/dify-plugins/yevanchen/exa
+          mv $GITHUB_WORKSPACE/$PACKAGE_NAME $GITHUB_WORKSPACE/dify-plugins/yevanchen/exa/
           
           # 进入目标仓库目录
-          cd dify-plugins
+          cd $GITHUB_WORKSPACE/dify-plugins
           
           # 配置git
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           
-          # 确保我们有完整的历史
-          git fetch --unshallow || git fetch
-          
-          # 确保我们在最新的main分支上
-          git fetch origin main
-          git checkout main
-          git pull origin main
+          # 确保远程配置正确
+          git remote -v
+          git remote set-url origin https://x-access-token:${{ secrets.PLUGIN_ACTION }}@github.com/Yevanchen/dify-plugins.git
           
           # 创建并切换到新分支
           BRANCH_NAME="update-exa-plugin-${{ steps.get_version.outputs.version }}"
@@ -103,8 +98,8 @@ jobs:
           git status # debug用
           git commit -m "Update exa plugin to version ${{ steps.get_version.outputs.version }}"
           
-          # 推送到远程 (使用force以防万一)
-          git push -u origin "$BRANCH_NAME" --force
+          # 推送到远程
+          git push origin "$BRANCH_NAME"
           
           # 确认分支已经推送
           git branch -a
@@ -123,8 +118,7 @@ jobs:
             - Updated plugin package file
           github_token: ${{ secrets.PLUGIN_ACTION }}
           pr_allow_empty: true
-          source_repository: "Yevanchen/dify-plugins"
-          
+
       - name: Print environment info
         run: |
           echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
