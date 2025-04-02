@@ -40,23 +40,23 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           
       - name: Package Plugin
+        id: package
         run: |
           # 使用下载的CLI工具进行打包
           cd $GITHUB_WORKSPACE
-          PACKAGE_NAME="exa-${VERSION}.difypkg"
+          PACKAGE_NAME="exa-${{ steps.get_version.outputs.version }}.difypkg"
           ./bin/dify-plugin-linux-amd64 plugin package . -o "$PACKAGE_NAME"
           
           # 显示打包结果
           echo "Package result:"
           ls -la "$PACKAGE_NAME"
+          echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
           
           # 显示完整的文件路径和目录结构
           echo "\nFull file path:"
           pwd
           echo "\nDirectory structure:"
           tree || ls -R
-        env:
-          VERSION: ${{ steps.get_version.outputs.version }}
 
       - name: Checkout target repo
         uses: actions/checkout@v3
@@ -70,8 +70,13 @@ jobs:
       - name: Prepare and create PR
         run: |
           # 移动打包文件到目标目录
+          PACKAGE_NAME="exa-${{ steps.get_version.outputs.version }}.difypkg"
+          echo "Debug: Current directory $(pwd)"
+          echo "Debug: Looking for package $PACKAGE_NAME"
+          ls -la
+          
           mkdir -p dify-plugins/yevanchen/exa
-          mv exa-${VERSION}.difypkg dify-plugins/yevanchen/exa/
+          mv "$PACKAGE_NAME" dify-plugins/yevanchen/exa/
           
           # 配置git
           cd dify-plugins
@@ -79,17 +84,18 @@ jobs:
           git config user.email "actions@github.com"
           
           # 创建新分支
-          git checkout -b update-exa-plugin-${VERSION}
+          BRANCH_NAME="update-exa-plugin-${{ steps.get_version.outputs.version }}"
+          git checkout -b "$BRANCH_NAME"
           
           # 添加并提交更改
           git add yevanchen/exa/
-          git commit -m "Update exa plugin to version ${VERSION}"
-          git push origin update-exa-plugin-${VERSION}
+          git commit -m "Update exa plugin to version ${{ steps.get_version.outputs.version }}"
+          git push origin "$BRANCH_NAME"
           
       - name: Create Pull Request
         uses: repo-sync/pull-request@v2
         with:
-          source_branch: "update-exa-plugin-${VERSION}"
+          source_branch: "update-exa-plugin-${{ steps.get_version.outputs.version }}"
           destination_repository: "langgenius/dify-plugins"
           destination_branch: "main"
           pr_title: "Update exa plugin to version ${{ steps.get_version.outputs.version }}"
