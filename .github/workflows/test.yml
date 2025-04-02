@@ -127,7 +127,6 @@ jobs:
             - Updated plugin package file
           github_token: ${{ secrets.PLUGIN_ACTION }}
           pr_allow_empty: true
-        working-directory: dify-plugins
 
       - name: Print environment info
         run: |
