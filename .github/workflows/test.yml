@@ -61,9 +61,11 @@ jobs:
       - name: Checkout target repo
         uses: actions/checkout@v3
         with:
-          repository: your-username/dify-plugins  # 替换为你的fork仓库
+          repository: Yevanchen/dify-plugins
           path: dify-plugins
-          token: ${{ secrets.PAT }}  # 需要设置这个secret
+          token: ${{ secrets.PLUGIN_ACTION }}
+          fetch-depth: 1
+          persist-credentials: true
           
       - name: Prepare and create PR
         run: |
@@ -88,7 +90,7 @@ jobs:
         uses: repo-sync/pull-request@v2
         with:
           source_branch: "update-exa-plugin-${VERSION}"
-          destination_repository: "original-org/dify-plugins"  # 替换为目标仓库
+          destination_repository: "langgenius/dify-plugins"
           destination_branch: "main"
           pr_title: "Update exa plugin to version ${{ steps.get_version.outputs.version }}"
           pr_body: |
@@ -96,7 +98,7 @@ jobs:
             
             Changes:
             - Updated plugin package file
-          github_token: ${{ secrets.PAT }}
+          github_token: ${{ secrets.PLUGIN_ACTION }}
           
       - name: Print environment info
         run: |
