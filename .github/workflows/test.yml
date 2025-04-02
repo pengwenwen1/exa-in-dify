@@ -69,28 +69,41 @@ jobs:
           
       - name: Prepare and create PR
         run: |
-          # 移动打包文件到目标目录
-          PACKAGE_NAME="exa-${{ steps.get_version.outputs.version }}.difypkg"
+          # Debug info
           echo "Debug: Current directory $(pwd)"
-          echo "Debug: Looking for package $PACKAGE_NAME"
+          echo "Debug: Package name: $PACKAGE_NAME"
           ls -la
           
+          # 移动打包文件到目标目录
+          PACKAGE_NAME="exa-${{ steps.get_version.outputs.version }}.difypkg"
           mkdir -p dify-plugins/yevanchen/exa
           mv "$PACKAGE_NAME" dify-plugins/yevanchen/exa/
           
-          # 配置git
+          # 进入目标仓库目录
           cd dify-plugins
+          
+          # 配置git
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           
-          # 创建新分支
+          # 确保我们在最新的main分支上
+          git fetch origin main
+          git checkout main
+          
+          # 创建并切换到新分支
           BRANCH_NAME="update-exa-plugin-${{ steps.get_version.outputs.version }}"
           git checkout -b "$BRANCH_NAME"
           
           # 添加并提交更改
           git add yevanchen/exa/
+          git status # debug用
           git commit -m "Update exa plugin to version ${{ steps.get_version.outputs.version }}"
-          git push origin "$BRANCH_NAME"
+          
+          # 推送到远程
+          git push -u origin "$BRANCH_NAME"
+          
+          # 确认分支已经推送
+          git branch -a
           
       - name: Create Pull Request
         uses: repo-sync/pull-request@v2
