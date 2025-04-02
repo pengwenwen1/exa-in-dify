@@ -111,22 +111,19 @@ jobs:
           echo "Waiting for branch to sync..."
           sleep 10  # 等待10秒让分支同步
           
-      - name: Create Pull Request
-        uses: repo-sync/pull-request@v2
+      - name: Create PR via GitHub API
         env:
-          GITHUB_TOKEN: ${{ secrets.PLUGIN_ACTION }}
-        with:
-          source_branch: "update-exa-plugin-${{ steps.get_version.outputs.version }}"
-          destination_repository: "langgenius/dify-plugins"
-          destination_branch: "main"
-          pr_title: "Update exa plugin to version ${{ steps.get_version.outputs.version }}"
-          pr_body: |
-            Update exa plugin package to version ${{ steps.get_version.outputs.version }}
-            
+          GH_TOKEN: ${{ secrets.PLUGIN_ACTION }}
+        run: |
+          gh pr create \
+            --repo langgenius/dify-plugins \
+            --head "Yevanchen:update-exa-plugin-${{ steps.get_version.outputs.version }}" \
+            --base main \
+            --title "Update exa plugin to version ${{ steps.get_version.outputs.version }}" \
+            --body "Update exa plugin package to version ${{ steps.get_version.outputs.version }}
+
             Changes:
-            - Updated plugin package file
-          github_token: ${{ secrets.PLUGIN_ACTION }}
-          pr_allow_empty: true
+            - Updated plugin package file" || echo "PR already exists or creation skipped."
 
       - name: Print environment info
         run: |
