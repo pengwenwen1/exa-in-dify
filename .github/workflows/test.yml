@@ -115,6 +115,7 @@ jobs:
         uses: repo-sync/pull-request@v2
         env:
           GITHUB_TOKEN: ${{ secrets.PLUGIN_ACTION }}
+        working-directory: dify-plugins
         with:
           source_branch: "update-exa-plugin-${{ steps.get_version.outputs.version }}"
           destination_repository: "langgenius/dify-plugins"
