@@ -86,9 +86,13 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           
+          # 确保我们有完整的历史
+          git fetch --unshallow || git fetch
+          
           # 确保我们在最新的main分支上
           git fetch origin main
           git checkout main
+          git pull origin main
           
           # 创建并切换到新分支
           BRANCH_NAME="update-exa-plugin-${{ steps.get_version.outputs.version }}"
@@ -99,8 +103,8 @@ jobs:
           git status # debug用
           git commit -m "Update exa plugin to version ${{ steps.get_version.outputs.version }}"
           
-          # 推送到远程
-          git push -u origin "$BRANCH_NAME"
+          # 推送到远程 (使用force以防万一)
+          git push -u origin "$BRANCH_NAME" --force
           
           # 确认分支已经推送
           git branch -a
