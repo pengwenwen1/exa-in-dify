@@ -49,8 +49,54 @@ jobs:
           # 显示打包结果
           echo "Package result:"
           ls -la "$PACKAGE_NAME"
+          
+          # 显示完整的文件路径和目录结构
+          echo "\nFull file path:"
+          pwd
+          echo "\nDirectory structure:"
+          tree || ls -R
         env:
           VERSION: ${{ steps.get_version.outputs.version }}
+
+      - name: Checkout target repo
+        uses: actions/checkout@v3
+        with:
+          repository: your-username/dify-plugins  # 替换为你的fork仓库
+          path: dify-plugins
+          token: ${{ secrets.PAT }}  # 需要设置这个secret
+          
+      - name: Prepare and create PR
+        run: |
+          # 移动打包文件到目标目录
+          mkdir -p dify-plugins/yevanchen/exa
+          mv exa-${VERSION}.difypkg dify-plugins/yevanchen/exa/
+          
+          # 配置git
+          cd dify-plugins
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          
+          # 创建新分支
+          git checkout -b update-exa-plugin-${VERSION}
+          
+          # 添加并提交更改
+          git add yevanchen/exa/
+          git commit -m "Update exa plugin to version ${VERSION}"
+          git push origin update-exa-plugin-${VERSION}
+          
+      - name: Create Pull Request
+        uses: repo-sync/pull-request@v2
+        with:
+          source_branch: "update-exa-plugin-${VERSION}"
+          destination_repository: "original-org/dify-plugins"  # 替换为目标仓库
+          destination_branch: "main"
+          pr_title: "Update exa plugin to version ${{ steps.get_version.outputs.version }}"
+          pr_body: |
+            Update exa plugin package to version ${{ steps.get_version.outputs.version }}
+            
+            Changes:
+            - Updated plugin package file
+          github_token: ${{ secrets.PAT }}
           
       - name: Print environment info
         run: |
