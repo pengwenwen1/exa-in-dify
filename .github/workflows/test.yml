@@ -32,6 +32,26 @@ jobs:
           pwd
           ls -la dify-plugin-linux-amd64
           
+      - name: Get Version from manifest
+        id: get_version
+        run: |
+          VERSION=$(grep "^version:" manifest.yaml | cut -d' ' -f2)
+          echo "Plugin version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          
+      - name: Package Plugin
+        run: |
+          # 使用下载的CLI工具进行打包
+          cd $GITHUB_WORKSPACE
+          PACKAGE_NAME="exa-${VERSION}.difypkg"
+          ./bin/dify-plugin-linux-amd64 plugin package . -o "$PACKAGE_NAME"
+          
+          # 显示打包结果
+          echo "Package result:"
+          ls -la "$PACKAGE_NAME"
+        env:
+          VERSION: ${{ steps.get_version.outputs.version }}
+          
       - name: Print environment info
         run: |
           echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
