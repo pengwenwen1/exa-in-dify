@@ -113,6 +113,8 @@ jobs:
           
       - name: Create Pull Request
         uses: repo-sync/pull-request@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.PLUGIN_ACTION }}
         with:
           source_branch: "update-exa-plugin-${{ steps.get_version.outputs.version }}"
           destination_repository: "langgenius/dify-plugins"
@@ -125,6 +127,8 @@ jobs:
             - Updated plugin package file
           github_token: ${{ secrets.PLUGIN_ACTION }}
           pr_allow_empty: true
+          repo_token: ${{ secrets.PLUGIN_ACTION }}
+          github_repository: "Yevanchen/dify-plugins"
 
       - name: Print environment info
         run: |
