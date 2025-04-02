@@ -17,6 +17,21 @@ jobs:
           pwd
           ls -la
           
+      - name: Download CLI tool
+        run: |
+          # 创建bin目录
+          mkdir -p $GITHUB_WORKSPACE/bin
+          cd $GITHUB_WORKSPACE/bin
+          
+          # 下载CLI工具
+          wget https://github.com/langgenius/dify-plugin-daemon/releases/download/0.0.6/dify-plugin-linux-amd64
+          chmod +x dify-plugin-linux-amd64
+          
+          # 显示下载位置和文件
+          echo "CLI tool location:"
+          pwd
+          ls -la dify-plugin-linux-amd64
+          
       - name: Print environment info
         run: |
           echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
