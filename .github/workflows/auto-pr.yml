@@ -127,14 +127,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PLUGIN_ACTION }} # Use the provided token for authentication
         run: |
-          gh pr create \\
-            --repo langgenius/dify-plugins \\
-            # Use variables for head branch reference
-            --head "${{ steps.get_basic_info.outputs.author }}:${{ steps.get_basic_info.outputs.plugin_name }}-${{ steps.get_basic_info.outputs.version }}" \\
-            --base main \\
-            # Use variables for title
-            --title "bump ${{ steps.get_basic_info.outputs.plugin_name }} plugin to version ${{ steps.get_basic_info.outputs.version }}" \\
-            # Use variables for body
+          gh pr create \
+            --repo langgenius/dify-plugins \
+            --head "${{ steps.get_basic_info.outputs.author }}:${{ steps.get_basic_info.outputs.plugin_name }}-${{ steps.get_basic_info.outputs.version }}" \
+            --base main \
+            --title "bump ${{ steps.get_basic_info.outputs.plugin_name }} plugin to version ${{ steps.get_basic_info.outputs.version }}" \
             --body "bump ${{ steps.get_basic_info.outputs.plugin_name }} plugin package to version ${{ steps.get_basic_info.outputs.version }}
 
             Changes:
