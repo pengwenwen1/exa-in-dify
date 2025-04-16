@@ -13,6 +13,20 @@ description:
     pt_BR: Realize pesquisas semânticas na web usando o mecanismo de busca com IA da Exa para encontrar conteúdo e documentos relevantes.
     ja_JP: Exaの AI 搜索エンジンを使用してウェブ上で意味検索を実行し、関連コンテンツやドキュメントを検索します。
   llm: A tool for performing semantic search on the web using Exa's AI-powered search engine to find relevant content, websites, and documents.
+output_schema:
+  type: object
+  description: The JSON response containing the search results, simplified to include only URLs and image URLs.
+  properties:
+    urls:
+      type: array
+      description: An array of URLs from the search results
+      items:
+        type: string
+    images:
+      type: array 
+      description: An array of image URLs from the search results
+      items:
+        type: string
 parameters:
   - name: query
     type: string

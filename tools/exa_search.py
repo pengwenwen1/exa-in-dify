@@ -49,7 +49,7 @@ class ExaSearchTool(Tool):
             start_published_date = tool_parameters.get("start_published_date", "")
             end_published_date = tool_parameters.get("end_published_date", "")
             use_autoprompt = tool_parameters.get("use_autoprompt", True)
-            text_contents = tool_parameters.get("text_contents", False)
+            text_contents = tool_parameters.get("text_contents", True)
             highlight_results = tool_parameters.get("highlight_results", False)
             category = tool_parameters.get("category", None)
             include_text = tool_parameters.get("includeText", None)
@@ -60,7 +60,7 @@ class ExaSearchTool(Tool):
             exclude_domains_list = [d.strip() for d in exclude_domains.split(",")] if exclude_domains else []
             
             # Build request payload
-            payload = {
+            payload: Dict[str, Any] = {
                 "query": query,
                 "numResults": num_results,
                 "useAutoprompt": use_autoprompt
@@ -73,7 +73,17 @@ class ExaSearchTool(Tool):
                 payload["type"] = "keyword"
             # If auto, don't set type param and let Exa decide
             
-            # Add optional parameters if provided
+            # Build contents options if needed
+            contents_options = {}
+            if text_contents:
+                contents_options["text"] = True
+            if highlight_results:
+                contents_options["highlights"] = True
+            
+            if contents_options:
+                payload["contents"] = contents_options
+            
+            # Add other optional parameters if provided
             if include_domains_list:
                 payload["includeDomains"] = include_domains_list
             if exclude_domains_list:
@@ -82,23 +92,20 @@ class ExaSearchTool(Tool):
                 payload["startPublishedDate"] = start_published_date
             if end_published_date:
                 payload["endPublishedDate"] = end_published_date
-            if text_contents:
-                payload["textContents"] = True
-            if highlight_results:
-                payload["highlights"] = True
             if category:
                 payload["category"] = category
             if include_text:
-                payload["includeText"] = [include_text]  # API expects an array
+                payload["includeText"] = [include_text]
             if exclude_text:
-                payload["excludeText"] = [exclude_text]  # API expects an array
-                
+                payload["excludeText"] = [exclude_text]
+            
             # Make API request
             headers = {
-                "x-api-key": api_key,
+                "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json"
             }
-            
+            print("Payload being sent to Exa API:")
+            print(json.dumps(payload, indent=2))
             response = requests.post(
                 "https://api.exa.ai/search",
                 json=payload,
@@ -108,13 +115,33 @@ class ExaSearchTool(Tool):
             response.raise_for_status()
             result_data = response.json()
             
-            # Return original JSON response
-            yield self.create_json_message(result_data)
-            
-            # Format and return text response in Markdown
-            markdown_response = self._format_results_as_markdown(result_data, query)
-            yield self.create_text_message(markdown_response)
-            
+            # 添加调试输出
+            print("\n===== ORIGINAL API RESPONSE JSON =====")
+            print(json.dumps(result_data, indent=2))
+            print("===== END OF ORIGINAL API RESPONSE =====\n")
+
+            # Extract urls and images from results
+            urls = []
+            images = []
+            raw_results = result_data.get("results", [])
+            for result in raw_results:
+                if url := result.get("url"):
+                    urls.append(url)
+                if image := result.get("image"):
+                    images.append(image)
+
+            # Yield urls and images as separate variables
+            yield self.create_variable_message("urls", urls)
+            yield self.create_variable_message("images", images)
+
+            # Debug output
+            print("\n===== AFTER create_variable_message =====")
+            print("Variable 'urls' sent to Dify:")
+            print(json.dumps(urls, indent=2))
+            print("Variable 'images' sent to Dify:")
+            print(json.dumps(images, indent=2))
+            print("===== END OF DEBUG OUTPUT =====\n")
+
         except requests.RequestException as e:
             error_message = f"Error when calling Exa Search API: {str(e)}"
             if hasattr(e, 'response') and e.response is not None:
@@ -161,8 +188,8 @@ class ExaSearchTool(Tool):
             markdown += f"### {i}. [{title}]({url})\n\n"
             
             # Add image if available
-            if "image" in result and result["image"]:
-                image_url = result["image"]
+            image_url = result.get("image", "")
+            if image_url:
                 markdown += f"![Image from {domain}]({image_url})\n\n"
             
             markdown += f"**Source:** {domain}\n"
