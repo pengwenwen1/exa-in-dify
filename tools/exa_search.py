@@ -159,6 +159,12 @@ class ExaSearchTool(Tool):
             author = result.get("author", "")
             
             markdown += f"### {i}. [{title}]({url})\n\n"
+            
+            # Add image if available
+            if "image" in result and result["image"]:
+                image_url = result["image"]
+                markdown += f"![Image from {domain}]({image_url})\n\n"
+            
             markdown += f"**Source:** {domain}\n"
             
             if published_date:
