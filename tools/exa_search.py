@@ -63,17 +63,21 @@ class ExaSearchTool(Tool):
             payload: Dict[str, Any] = {
                 "query": query,
                 "numResults": num_results,
-                "useAutoprompt": use_autoprompt
+                "useAutoprompt": use_autoprompt,
+                "type": search_type if search_type != "auto" else None,
+                "includeDomains": include_domains_list if include_domains_list else None,
+                "excludeDomains": exclude_domains_list if exclude_domains_list else None,
+                "startPublishedDate": start_published_date if start_published_date else None,
+                "endPublishedDate": end_published_date if end_published_date else None,
+                "category": category,
+                "includeText": [include_text] if include_text else None,
+                "excludeText": [exclude_text] if exclude_text else None
             }
             
-            # Handle search type (neural vs keyword vs auto)
-            if search_type == "neural":
-                payload["type"] = "neural"
-            elif search_type == "keyword":
-                payload["type"] = "keyword"
-            # If auto, don't set type param and let Exa decide
+            # Remove None values from payload
+            payload = {k: v for k, v in payload.items() if v is not None}
             
-            # Build contents options if needed
+            # Add contents options if needed
             contents_options = {}
             if text_contents:
                 contents_options["text"] = True
@@ -82,22 +86,6 @@ class ExaSearchTool(Tool):
             
             if contents_options:
                 payload["contents"] = contents_options
-            
-            # Add other optional parameters if provided
-            if include_domains_list:
-                payload["includeDomains"] = include_domains_list
-            if exclude_domains_list:
-                payload["excludeDomains"] = exclude_domains_list
-            if start_published_date:
-                payload["startPublishedDate"] = start_published_date
-            if end_published_date:
-                payload["endPublishedDate"] = end_published_date
-            if category:
-                payload["category"] = category
-            if include_text:
-                payload["includeText"] = [include_text]
-            if exclude_text:
-                payload["excludeText"] = [exclude_text]
             
             # Make API request
             headers = {
@@ -115,11 +103,13 @@ class ExaSearchTool(Tool):
             response.raise_for_status()
             result_data = response.json()
             
-            # 添加调试输出
-            print("\n===== ORIGINAL API RESPONSE JSON =====")
-            print(json.dumps(result_data, indent=2))
-            print("===== END OF ORIGINAL API RESPONSE =====\n")
+            # Yield the raw JSON response first
+            yield self.create_json_message(result_data)
 
+            # Format and yield the results as markdown text
+            markdown_output = self._format_results_as_markdown(result_data, query)
+            yield self.create_text_message(markdown_output)
+            
             # Extract urls and images from results
             urls = []
             images = []
@@ -127,8 +117,18 @@ class ExaSearchTool(Tool):
             for result in raw_results:
                 if url := result.get("url"):
                     urls.append(url)
-                if image := result.get("image"):
-                    images.append(image)
+                # Handle image extraction with proper validation
+                if "image" in result:
+                    image = result["image"]
+                    if isinstance(image, str) and image.strip():  # Ensure non-empty string
+                        if image.startswith(('http://', 'https://')):  # Basic URL validation
+                            images.append(image)
+
+            # Debug output
+            print("\n===== EXTRACTED URLS AND IMAGES =====")
+            print("URLs:", urls)
+            print("Images:", images)
+            print("===== END OF EXTRACTION =====\n")
 
             # Yield urls and images as separate variables
             yield self.create_variable_message("urls", urls)
