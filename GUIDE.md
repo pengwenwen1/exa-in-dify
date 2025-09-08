@@ -1,4 +1,4 @@
-## User Guide of how to develop a Dify Plugin
+## User Guide of how to develop a Dify Plugin 
 
 Hi there, looks like you have already created a Plugin, now let's get you started with the development!
 
